@@ -1,0 +1,280 @@
+<?php
+include 'config.php';
+?>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hotel TV Launcher</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body { font-family: 'Inter', sans-serif; overflow: hidden; }
+.bg-launcher { background-size: cover; background-position: center center; background-repeat: no-repeat; transition: background-image 0.4s ease-in-out; }
+.bg-overlay { background-color: rgba(0, 0, 0, 0.4); }
+.menu-container-wrapper { width: 100%; display: flex; justify-content: center; align-items: center; }
+.menu-scroll-container { display: flex; align-items: center; overflow: hidden; width: 1150px; height: 180px; justify-content: flex-start; }
+#main-menu-items { display: flex; flex-wrap: nowrap; white-space: nowrap; transition: transform 0.3s ease-in-out; align-items: center; }
+.nav-arrow { color: rgba(255,255,255,0.5); transition: all 0.2s ease; }
+.nav-arrow.active { color: rgba(255,255,255,1); transform: scale(1.2); }
+.menu-item { transition: all 0.25s ease-in-out; width: 135px; height: 135px; margin: 0 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 22px; text-align: center; flex-shrink: 0; background: rgba(255,255,255,0.05); filter: brightness(0.85); border: none; position: relative; }
+.menu-item::after { content: ""; position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); width: 60%; height: 8px; border-radius: 50%; background: radial-gradient(ellipse at center, rgba(255,255,255,0.25), transparent 70%); opacity: 0; transition: opacity 0.3s ease; }
+.menu-item.focused { transform: translateY(-6px) scale(1.1); filter: brightness(1.25); background: radial-gradient(circle at top, rgba(255,255,255,0.15), rgba(0,0,0,0.4)); box-shadow: 0 8px 25px rgba(0,0,0,0.55), 0 0 25px rgba(255,255,255,0.25) inset; }
+.menu-item.focused::after { opacity: 1; }
+.menu-item-icon { width: 56px; height: 56px; object-fit: contain; margin-bottom: 6px; transform: scale(0.95); transition: transform 0.25s ease; }
+.menu-item.focused .menu-item-icon { transform: scale(1.12); }
+.menu-item span { font-size: 0.9rem; transition: color 0.3s ease; }
+.menu-item.focused span { color: #fff; }
+.hidden { display: none; }
+.loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+@keyframes spin { 0% {transform:rotate(0deg);} 100% {transform:rotate(360deg);} }
+.marquee-container { width: 100%; background-color: rgba(0,0,0,0.6); overflow: hidden; position: absolute; bottom: 0; left: 0; white-space: nowrap; box-sizing: border-box; padding: 6px 0; }
+.marquee-text { display: inline-block; color: white; font-size: 1rem; line-height: 1.5rem; animation: marquee 30s linear infinite; padding-left: 100%; }
+@keyframes marquee { 0% {transform:translateX(0%);} 100% {transform:translateX(-100%);} }
+.header-time { font-size:2.5rem; line-height:1.1; font-weight:700; }
+.header-date { font-size:1rem; color:#d1d5db; }
+.weather-icon { width: 2.5rem; height: 2.5rem; margin-right: 0.5rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); }
+.guest-hello { font-size: 0.75rem; color:#d1d5db; }
+.guest-name { font-size: 1.125rem; font-weight:600; }
+.room-label { font-size: 0.75rem; color:#d1d5db; }
+.room-number { font-size: 1.125rem; font-weight:600; }
+.guest-avatar { width:48px; height:48px; border-radius:9999px; background-color:#374151; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+.guest-avatar svg { width:24px; height:24px; color:#9ca3af; }
+.guest-info-wrapper { display:flex; align-items:center; gap:1rem; text-align:right; }
+.guest-room-wrapper { padding-left:1rem; border-left:1px solid #4b5563; }
+.register-title { font-size:2rem; line-height:2.5rem; font-weight:700; color:#facc15; }
+.register-desc { font-size:1.125rem; line-height:1.75rem; color:#d1d5db; }
+.register-codebox { background:white; color:black; font-size:2rem; line-height:2.5rem; font-family:monospace; font-weight:700; padding:1.5rem; border-radius:.5rem; display:inline-block; min-width:12ch; text-align:center; }
+.register-status { color:#facc15; font-size:1rem; line-height:1.5rem; margin-top:1.5rem; }
+.register-footnote { color:#9ca3af; font-size:.75rem; line-height:1rem; margin-top:1.5rem; }
+*:focus { outline:none!important; border:none!important; box-shadow:none!important; }
+.lang-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); padding: 5px 12px; border-radius: 8px; cursor: pointer; color: white; font-weight: bold; margin-left: 15px; }
+.lang-btn:focus { background: #facc15; color: black; box-shadow: 0 0 10px rgba(250, 204, 21, 0.5); }
+</style>
+</head>
+<body class="bg-gray-900 text-white h-screen w-screen overflow-hidden">
+
+<div id="launcher-container" class="relative h-full w-full bg-launcher hidden">
+    <div class="absolute inset-0 bg-overlay"></div>
+    <div class="relative z-10 h-full w-full flex flex-col p-8 md:p-12">
+        <header class="flex justify-between items-start">
+            <div class="flex items-center space-x-4">
+                <img id="weather-icon-display" src="" alt="Cuaca" class="weather-icon hidden">
+                <div>
+                    <p class="header-time" id="time-display">--:--</p>
+                    <p class="header-date" id="date-display">Loading...</p>
+                </div>
+            </div>
+            <div class="flex items-center">
+                <button id="langToggle" class="lang-btn" tabindex="0">ID</button>
+
+                <div class="guest-info-wrapper text-right ml-6">
+                    <div class="text-right">
+                        <p class="guest-hello" data-translate="welcome">Selamat Datang</p>
+                        <p class="guest-name" id="guest-name-display">Fetching...</p>
+                    </div>
+                    <div class="guest-avatar">
+                        <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>
+                    </div>
+                    <div class="guest-room-wrapper text-right">
+                        <p class="room-label" data-translate="room">Room</p>
+                        <p class="room-number" id="room-number-display">...</p>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <div class="flex-grow"></div>
+        <footer class="menu-container-wrapper">
+            <div id="nav-arrow-left" class="nav-arrow p-2"><svg class="w-10 h-10" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg></div>
+            <div class="menu-scroll-container"><div id="main-menu-items"></div></div>
+            <div id="nav-arrow-right" class="nav-arrow active p-2"><svg class="w-10 h-10" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path></svg></div>
+        </footer>
+    </div>
+    <div class="marquee-container"><div class="marquee-text" id="marquee-text-content">Loading...</div></div>
+    <div id="disabled-screen" class="absolute inset-0 bg-gray-900 z-50 hidden justify-center items-center p-10 text-center">
+        <div><svg class="w-24 h-24 mx-auto text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path></svg><h1 class="text-3xl text-white font-bold mt-8">Launcher Disabled</h1></div>
+    </div>
+</div>
+
+<div id="unregistered-screen" class="absolute inset-0 bg-gray-800 z-50 flex justify-center items-center p-10 text-center">
+    <div>
+        <h1 class="register-title mb-4">Perangkat Belum Terdaftar</h1>
+        <p class="register-desc mb-8">Hubungi admin hotel.</p>
+        <div class="register-codebox" id="unique-code-display"><div class="loader mx-auto"></div></div>
+        <p class="register-status" id="polling-status">...</p>
+        <p class="register-footnote"><a href="index.php?reset=true" onclick="clearLocalStorage()">Reset ID</a></p>
+    </div>
+</div>
+
+<script>
+const PAGE_ROUTES = { information:'information.html', facilities:'facilities.html', amenities:'amenities.html', dining:'dining.html' };
+const STORAGE_DEVICE_ID_KEY = 'myDeviceID_v8_final';
+let currentDeviceID = localStorage.getItem(STORAGE_DEVICE_ID_KEY);
+
+// LOGIKA BAHASA
+let currentLang = localStorage.getItem('app_lang') || 'id';
+const dict = {
+    'id': { 'welcome': 'Selamat Datang', 'room': 'Kamar' },
+    'en': { 'welcome': 'Welcome', 'room': 'Room' }
+};
+
+const langBtn = document.getElementById('langToggle');
+langBtn.textContent = currentLang.toUpperCase();
+
+// Fungsi Ganti Bahasa
+function toggleLanguage() {
+    currentLang = (currentLang === 'id') ? 'en' : 'id';
+    localStorage.setItem('app_lang', currentLang);
+    langBtn.textContent = currentLang.toUpperCase();
+    updateStaticText();
+    // Reload data dengan bahasa baru
+    if(currentDeviceID) loadLauncherData(currentDeviceID);
+}
+
+// Event Klik Tombol Bahasa
+langBtn.addEventListener('click', toggleLanguage);
+langBtn.addEventListener('keydown', (e) => {
+    if(e.key === 'Enter') toggleLanguage();
+    if(e.key === 'ArrowDown') { 
+        document.querySelector('.menu-item')?.focus(); 
+        e.preventDefault(); 
+    }
+});
+
+function updateStaticText() {
+    document.querySelectorAll('[data-translate]').forEach(el => {
+        const key = el.getAttribute('data-translate');
+        if(dict[currentLang][key]) el.textContent = dict[currentLang][key];
+    });
+}
+
+// === MAIN LOGIC ===
+let menuItems = [];
+let currentFocusIndex = 0;
+
+async function loadLauncherData(deviceID) {
+    try {
+        const [guestRes, marqueeRes, appsRes, weatherRes] = await Promise.all([
+            fetch(`./api.php?action=getGuestInfo&device_id=${deviceID}&lang=${currentLang}`),
+            fetch(`./api.php?action=getMarqueeText&lang=${currentLang}`),
+            fetch(`./api.php?action=getAppVisibility&lang=${currentLang}`),
+            fetch(`./api.php?action=getWeather&lang=${currentLang}`)
+        ]);
+
+        const g = await guestRes.json();
+        if(g.status==='success'){
+            document.getElementById('guest-name-display').textContent=g.data.guest_name;
+            document.getElementById('room-number-display').textContent=g.data.room_number;
+        }
+
+        const m = await marqueeRes.json();
+        if(m.status==='success') document.getElementById('marquee-text-content').textContent=m.text;
+        
+        const a = await appsRes.json();
+        if(a.status==='success') buildMainMenu(a.apps);
+        
+        const w = await weatherRes.json();
+        if(w.status==='success') {
+            document.getElementById('weather-icon-display').src = `https://openweathermap.org/img/wn/${w.data.icon}@2x.png`;
+            document.getElementById('weather-icon-display').classList.remove('hidden');
+            window.weatherInfo = w.data;
+        }
+
+        document.getElementById('launcher-container').classList.remove('hidden');
+        document.getElementById('unregistered-screen').classList.add('hidden');
+        updateStaticText();
+        
+        // Panggil Android Bridge
+        if(window.AndroidBridge && typeof window.AndroidBridge.hideLoadingScreen === 'function') {
+            window.AndroidBridge.hideLoadingScreen();
+        }
+        
+        loadDynamicBackground();
+
+    } catch(e) { console.log(e); }
+}
+
+async function loadDynamicBackground() {
+    try {
+        const res = await fetch(`./api.php?action=getHomeBackground&_=${Date.now()}`);
+        const data = await res.json();
+        if(data.status==='success' && data.background_url) {
+            document.querySelector('.bg-launcher').style.backgroundImage = `url('${data.background_url}')`;
+        }
+    } catch(e){}
+}
+
+function buildMainMenu(apps) {
+    const c = document.getElementById('main-menu-items');
+    c.innerHTML = '';
+    apps.forEach((app, i) => {
+        const el = document.createElement('div');
+        el.className = 'menu-item';
+        el.tabIndex = 0; 
+        el.dataset.index = i;
+        el.dataset.page = PAGE_ROUTES[app.app_key] || '';
+        el.dataset.pkg = app.android_package || '';
+        el.innerHTML = `<img src="${app.icon_path}" class="menu-item-icon"><span>${app.app_name}</span>`;
+        
+        el.onclick = () => {
+            if(el.dataset.page) window.location.href = el.dataset.page;
+            else if(el.dataset.pkg) {
+                 if(window.AndroidBridge) window.AndroidBridge.launchApp(el.dataset.pkg);
+                 else console.log('Launch: ' + el.dataset.pkg);
+            }
+        };
+        el.onfocus = () => { currentFocusIndex=i; scrollMenu(); };
+        c.appendChild(el);
+    });
+    menuItems = document.querySelectorAll('.menu-item');
+}
+
+function scrollMenu() {
+    const f = menuItems[currentFocusIndex];
+    if(!f) return;
+    const cw = document.querySelector('.menu-scroll-container').offsetWidth;
+    const iw = f.offsetWidth + 8;
+    const s = (currentFocusIndex * iw) - (cw/2) + (iw/2);
+    document.getElementById('main-menu-items').style.transform = `translateX(-${Math.max(0, s)}px)`;
+    
+    // Update Arrow
+    document.getElementById('nav-arrow-left').classList.toggle('active', currentFocusIndex > 0);
+    document.getElementById('nav-arrow-right').classList.toggle('active', currentFocusIndex < menuItems.length-1);
+}
+
+// Navigasi Keyboard
+document.addEventListener('keydown', e => {
+    if(document.activeElement === langBtn) return; // Biarkan tombol bahasa handle sendiri
+    
+    if(e.key === 'ArrowRight' && currentFocusIndex < menuItems.length-1) menuItems[currentFocusIndex+1].focus();
+    if(e.key === 'ArrowLeft' && currentFocusIndex > 0) menuItems[currentFocusIndex-1].focus();
+    if(e.key === 'ArrowUp') { langBtn.focus(); e.preventDefault(); }
+    if(e.key === 'Enter') document.activeElement.click();
+});
+
+// Jam & Tanggal
+setInterval(() => {
+    const n = new Date();
+    document.getElementById('time-display').textContent = n.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit', hour12:false});
+    document.getElementById('date-display').textContent = (window.weatherInfo ? `${window.weatherInfo.temp}°C | ` : '') + n.toLocaleDateString(currentLang==='id'?'id-ID':'en-US', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+}, 1000);
+
+// Init
+if(currentDeviceID) {
+    loadLauncherData(currentDeviceID);
+} else {
+    // Mode Registrasi (Sederhana)
+    const code = 'TV-'+Math.random().toString(36).substr(2,6).toUpperCase();
+    document.getElementById('unique-code-display').textContent = code;
+    setInterval(async () => {
+        const r = await fetch(`./api.php?action=checkRegistration&device_id=${code}`);
+        const d = await r.json();
+        if(d.is_registered) {
+            localStorage.setItem(STORAGE_DEVICE_ID_KEY, code);
+            location.reload();
+        }
+    }, 5000);
+}
+</script>
+</body>
+</html>

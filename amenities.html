@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Amenities</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body { font-family: sans-serif; background: radial-gradient(circle at top left, #1a1a1a, #0e0e0e); color: white; overflow: hidden; }
+.menu-card { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 15px; height: 220px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+.menu-card:focus { outline: 3px solid #facc15; transform: scale(1.05); background: rgba(255,255,255,0.15); }
+.qty-btn { width: 30px; height: 30px; border-radius: 50%; background: #333; border: 1px solid #555; }
+.qty-btn:focus, .qty-btn:hover { background: #facc15; color: black; }
+</style>
+</head>
+<body>
+<div class="flex h-screen w-screen">
+  <div class="flex-1 p-8 overflow-auto">
+    <h1 class="text-4xl font-bold text-yellow-400 mb-6 text-center" data-translate="amenities_title">Amenities</h1>
+    <div id="menu-list" class="grid grid-cols-4 gap-6"></div>
+  </div>
+  <div class="w-96 bg-gray-900 p-6 flex flex-col border-l border-gray-700">
+    <h2 class="text-xl font-bold mb-4 text-yellow-400" data-translate="request_list">Daftar Permintaan</h2>
+    <div id="cart-list" class="flex-1 overflow-auto space-y-3"></div>
+    <div class="border-t border-gray-700 pt-4 mt-2">
+      <button id="submit-btn" class="w-full bg-yellow-400 text-black py-3 rounded-lg font-bold hover:bg-yellow-300" data-translate="send_btn">Kirim</button>
+      <button id="close-btn" class="w-full bg-gray-700 mt-3 py-3 rounded-lg hover:bg-gray-600" data-translate="close">Tutup</button>
+    </div>
+  </div>
+</div>
+<script>
+let cart={};
+// 1. AMBIL BAHASA
+const lang = localStorage.getItem('app_lang') || 'id';
+
+// 2. KAMUS BAHASA
+const dict = {
+  'id': { 'amenities_title': 'Permintaan Amenities', 'request_list': 'Daftar Permintaan', 'send_btn': 'Kirim Permintaan', 'close': 'Kembali', 'success': 'Permintaan Terkirim!', 'empty': 'Belum ada item dipilih' },
+  'en': { 'amenities_title': 'Amenities Request', 'request_list': 'Request List', 'send_btn': 'Send Request', 'close': 'Back', 'success': 'Request Sent!', 'empty': 'No items selected' }
+};
+
+document.querySelectorAll('[data-translate]').forEach(el => {
+  const k = el.dataset.translate;
+  if(dict[lang][k]) el.textContent = dict[lang][k];
+});
+
+async function load() {
+  try {
+      // 3. REQUEST API DENGAN BAHASA
+      const res = await fetch(`./api.php?action=getAmenities&lang=${lang}`);
+      const d = await res.json();
+      const c = document.getElementById('menu-list');
+      d.data.forEach((i, idx) => {
+        const el = document.createElement('div');
+        el.className='menu-card';
+        el.tabIndex=0; el.dataset.index=idx;
+        // i.name sudah otomatis Inggris jika database amenities lengkap dan lang=en
+        el.innerHTML=`
+            <img src="${i.icon_path}" class="h-24 w-24 object-contain mb-3">
+            <b class="text-yellow-400 text-lg">${i.name}</b>
+        `;
+        el.onclick=()=>add(i);
+        el.onkeydown=(e)=>{if(e.key==='Enter')add(i)};
+        c.appendChild(el);
+      });
+      c.firstElementChild?.focus();
+  } catch(e){}
+}
+
+function add(i) {
+  if(!cart[i.id]) cart[i.id]={...i, qty:0};
+  cart[i.id].qty++; render();
+}
+
+function render() {
+  const c = document.getElementById('cart-list'); c.innerHTML='';
+  for(let k in cart) {
+    const i=cart[k];
+    const div = document.createElement('div');
+    div.className = "flex justify-between items-center bg-gray-800 p-3 rounded";
+    div.innerHTML = `
+        <span class="font-bold text-sm">${i.name}</span>
+        <div class="flex items-center gap-2">
+            <button class="qty-btn" onclick="updateQty(${i.id}, -1)">-</button>
+            <span class="w-4 text-center">${i.qty}</span>
+            <button class="qty-btn" onclick="updateQty(${i.id}, 1)">+</button>
+        </div>
+    `;
+    c.appendChild(div);
+  }
+}
+
+window.updateQty = (id, delta) => {
+    if(cart[id]) {
+        cart[id].qty += delta;
+        if(cart[id].qty <= 0) delete cart[id];
+        render();
+    }
+};
+
+document.getElementById('submit-btn').onclick=async()=>{
+  if(Object.keys(cart).length===0) return alert(dict[lang]['empty']);
+  await fetch('./api.php?action=submitAmenityRequest', {
+    method:'POST', body:JSON.stringify({guest_name:localStorage.getItem('guest_name_v8_final')||'Guest', room_number:localStorage.getItem('room_number_v8_final')||'-', items:Object.values(cart)})
+  });
+  alert(dict[lang]['success']); cart={}; render();
+};
+
+document.getElementById('close-btn').onclick=()=>location.href='index.php';
+
+document.addEventListener('keydown', (e) => {
+    if(e.key === 'Backspace' || e.key === 'Escape') location.href='index.php';
+    if(e.key === 'ArrowRight' && document.activeElement.classList.contains('menu-card')) {
+        const idx = parseInt(document.activeElement.dataset.index);
+        if((idx+1) % 4 === 0) { document.getElementById('close-btn').focus(); e.preventDefault(); }
+    }
+    if(e.key === 'ArrowLeft' && !document.activeElement.classList.contains('menu-card')) {
+        document.querySelector('.menu-card')?.focus(); e.preventDefault();
+    }
+});
+
+load();
+</script>
+</body>
+</html>

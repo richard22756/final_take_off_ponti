@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Welcome</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body { margin:0; overflow:hidden; background:#111; color:#fff; font-family:sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; }
+.card { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 40px; border-radius: 20px; max-width: 900px; width: 90%; display:flex; gap: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+.btn { background: #facc15; color: black; padding: 10px 30px; border-radius: 8px; font-weight: bold; text-decoration: none; display: inline-block; margin-top: 20px; }
+.btn:focus { box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.5); outline: none; background: white; }
+
+/* STYLE BARU UNTUK TOMBOL BAHASA */
+.lang-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid transparent;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+.lang-btn.active, .lang-btn:focus {
+    background: #facc15;
+    color: black;
+    border-color: #fff;
+    outline: none;
+    transform: scale(1.1);
+    box-shadow: 0 0 10px rgba(250, 204, 21, 0.7);
+}
+</style>
+</head>
+<body>
+    <div id="content" class="card hidden"></div>
+    <script>
+    const STORAGE_LANG_KEY = 'app_lang';
+    let currentLang = localStorage.getItem(STORAGE_LANG_KEY) || 'id'; // Default 'id'
+    
+    // Fungsi untuk menyimpan bahasa dan memuat ulang konten sambutan
+    function setLanguage(lang) {
+        if (lang === currentLang) return; // Hindari reload jika sama
+        
+        localStorage.setItem(STORAGE_LANG_KEY, lang);
+        currentLang = lang;
+        
+        // Muat ulang hanya konten sambutan, bukan seluruh halaman
+        loadGreetingContent(lang);
+        updateButtonState(lang);
+    }
+    
+    // Fungsi untuk mendapatkan data sambutan dari API (sebelumnya bernama load)
+    async function loadGreetingContent(lang) {
+        try {
+            // Ambil greeting dari API dengan parameter bahasa
+            const res = await fetch(`./api.php?action=getCustomGreeting&lang=${lang}&_=${Date.now()}`);
+            const d = await res.json();
+            const item = d.data;
+            
+            // Render konten sambutan
+            document.getElementById('greeting-text-area').innerHTML = `
+                <h1 class="text-4xl font-bold text-yellow-400 mb-4">${item.title}</h1>
+                <div class="text-gray-200 text-lg leading-relaxed mb-6">${item.content.replace(/\n/g, '<br>')}</div>
+            `;
+            
+            // Pastikan gambar diupdate jika URL-nya berubah (meski biasanya tidak)
+            document.getElementById('greeting-image').src = item.image;
+            
+            document.getElementById('content').classList.remove('hidden');
+            
+        } catch(e) { 
+            // Jika gagal load API, langsung ke index.php
+            console.error("Failed to load greeting:", e);
+            window.location.href='index.php'; 
+        }
+    }
+
+    // Fungsi untuk memperbarui status tombol
+    function updateButtonState(lang) {
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.lang === lang) {
+                btn.classList.add('active');
+            }
+        });
+        // Fokuskan tombol Lanjut setelah konten dimuat
+        setTimeout(() => {
+            const focusedBtn = document.querySelector('.lang-btn.active') || document.getElementById('btn');
+            if (focusedBtn) focusedBtn.focus();
+        }, 100);
+    }
+    
+    // Fungsi utama yang dipanggil saat DOM siap
+    async function load() {
+        // Render kerangka awal (termasuk tombol bahasa)
+        document.getElementById('content').innerHTML = `
+            <img id="greeting-image" src="" class="w-1/3 object-cover rounded-lg shadow-lg">
+            <div class="flex-1 flex flex-col justify-center">
+                <div id="greeting-text-area">
+                    </div>
+                <div class="mt-4 flex gap-6 items-center">
+                    <div><a href="index.php" id="btn" class="btn">Lanjut &rarr;</a></div>
+                    
+                    <div class="flex space-x-3">
+                        <button class="lang-btn" data-lang="id" tabindex="1" onclick="setLanguage('id')">ID</button>
+                        <button class="lang-btn" data-lang="en" tabindex="2" onclick="setLanguage('en')">EN</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Muat konten awal sesuai bahasa yang sudah tersimpan
+        await loadGreetingContent(currentLang);
+        updateButtonState(currentLang);
+        
+        // Sembunyikan loading screen Android
+        if(window.AndroidBridge && typeof window.AndroidBridge.hideLoadingScreen === 'function') {
+            window.AndroidBridge.hideLoadingScreen();
+        }
+    }
+    
+    // Global Keydown Handler (untuk remote TV)
+    document.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter') {
+            if (document.activeElement.id === 'btn') {
+                 window.location.href='index.php';
+            } else if (document.activeElement.classList.contains('lang-btn')) {
+                // Trigger onclick handler jika Enter ditekan pada tombol bahasa
+                document.activeElement.click(); 
+            }
+        }
+    });
+    
+    load();
+    </script>
+</body>
+</html>

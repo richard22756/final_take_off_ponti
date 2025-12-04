@@ -1,0 +1,66 @@
+2025-11-03 04:11:00 | Launcher start OK ✅
+2025-11-03 04:11:07 | launchApp dipanggil: com.netflix.ninja
+2025-11-03 04:11:11 | showAdminPanel dipanggil dari JS
+2025-11-03 04:11:12 | showAdminPanel dipanggil dari JS
+2025-11-03 04:11:12 | showAdminPanel dipanggil dari JS
+2025-11-03 04:19:19 | Launcher start OK ✅
+2025-11-03 04:19:24 | launchApp dipanggil: com.google.android.youtube.tv
+2025-11-03 04:21:23 | Launcher start OK ✅
+2025-11-03 04:21:30 | launchApp dipanggil: com.google.android.youtube.tv
+2025-11-03 04:21:36 | launchApp dipanggil: com.vidio.android.tv
+2025-11-03 04:21:42 | showAdminPanel dipanggil dari JS
+2025-11-03 04:21:42 | showAdminPanel dipanggil dari JS
+2025-11-03 04:25:42 | Launcher start OK ✅
+2025-11-03 04:25:48 | showAdminPanel dipanggil dari JS
+2025-11-03 04:25:48 | showAdminPanel dipanggil dari JS
+2025-11-03 04:25:48 | showAdminPanel dipanggil dari JS
+2025-11-03 04:25:48 | showAdminPanel dipanggil dari JS
+2025-11-03 04:25:48 | showAdminPanel dipanggil dari JS
+2025-11-03 04:25:48 | showAdminPanel dipanggil dari JS
+2025-11-03 04:25:48 | showAdminPanel dipanggil dari JS
+2025-11-07 20:19:24 | 🚀 Launcher started
+2025-11-07 20:20:05 | 🚀 Launcher started
+2025-11-07 20:20:56 | 🚀 Launcher started
+2025-11-07 20:34:04 | Launcher start OK 
+2025-11-07 20:34:19 | Panel admin dibuka
+2025-11-07 20:34:26 | Panel admin ditutup
+2025-11-07 20:34:26 | Tombol Close diklik
+2025-11-07 20:35:27 | launchApp dipanggil: com.google.android.youtube.tv
+2025-11-07 20:35:34 | launchApp dipanggil: com.netflix.ninja
+2025-11-07 20:35:41 | launchApp dipanggil: com.spotify.tv.android
+2025-11-07 20:35:44 | launchApp dipanggil: in.startv.hotstar.dplus.tv
+2025-11-07 20:35:53 | launchApp dipanggil: com.netflix.ninja
+2025-11-07 20:36:18 | Launcher start OK 
+2025-11-07 20:42:01 | Launcher start OK ✅
+2025-11-07 20:42:10 | launchApp dipanggil: com.google.android.youtube.tv
+2025-11-07 20:42:16 | Panel admin dibuka
+2025-11-07 20:42:25 | Tombol Reload diklik
+2025-11-07 20:42:36 | Tombol Update diklik
+2025-11-07 20:43:07 | Tombol Close diklik
+2025-11-07 20:43:07 | Panel admin ditutup
+2025-11-07 20:43:12 | launchApp dipanggil: com.spotify.tv.android
+2025-11-07 20:43:15 | launchApp dipanggil: in.startv.hotstar.dplus.tv
+2025-11-07 20:43:18 | launchApp dipanggil: com.vidio.android.tv
+2025-11-07 20:43:42 | Panel admin dibuka
+2025-11-07 20:46:38 | Tombol Reload diklik
+2025-11-07 20:46:49 | Panel admin ditutup
+2025-11-07 20:46:49 | Tombol Close diklik
+2025-11-07 20:50:15 | Launcher start OK ✅
+2025-11-07 21:03:52 | Launcher start OK ✅
+2025-11-07 21:03:59 | JS launchApp: com.google.android.youtube.tv
+2025-11-07 21:04:04 | JS launchApp: com.spotify.tv.android
+2025-11-07 21:04:14 | Admin: Update clicked
+2025-11-07 21:04:21 | Admin: Open settings
+2025-11-07 21:04:26 | Admin: Open settings
+2025-11-07 21:04:36 | Admin: Close panel
+2025-11-07 21:04:41 | JS launchApp: com.google.android.youtube.tv
+2025-11-07 21:20:12 | Launcher start OK ✅
+2025-11-07 21:21:27 | Update error: Invalid value for visibility: 2
+2025-11-07 21:21:38 | Update error: Invalid value for visibility: 2
+2025-11-07 21:39:29 | Update error: Invalid value for visibility: 2
+2025-11-07 21:48:15 | Update gagal: Invalid value for visibility: 2
+2025-11-07 21:59:23 | Update error: Invalid value for visibility: 2
+2025-11-07 22:17:35 | Update error: Invalid value for visibility: 2
+2025-11-08 02:19:40 | Update error: Invalid value for visibility: 2
+2025-11-10 16:00:04 | Update error: Invalid value for visibility: 2
+2025-11-10 16:15:22 | Update error: Invalid value for visibility: 2

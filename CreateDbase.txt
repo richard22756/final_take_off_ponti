@@ -1,0 +1,9 @@
+CREATE DATABASE takeoff
+CHARACTER SET utf8mb4
+COLLATE utf8mb4_general_ci;
+
+CREATE USER 'U_Takeoff'@'localhost' IDENTIFIED BY 'TakeOff2025';
+
+GRANT ALL PRIVILEGES ON takeoff.* TO 'U_Takeoff'@'localhost';
+
+FLUSH PRIVILEGES;

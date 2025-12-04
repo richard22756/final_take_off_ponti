@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Facilities</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body { margin:0; overflow:hidden; background:#000; color:#fff; font-family:sans-serif; }
+.slide { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; opacity:0; transition:opacity 1s ease; }
+.slide.active { opacity:1; z-index:10; }
+.slide img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:brightness(0.7); }
+.caption { background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); width:100%; text-align:center; padding:3rem 2rem; position:absolute; bottom:0; }
+.caption h2 { font-size:2.5rem; color:#facc15; margin-bottom:.5rem; font-weight:bold; }
+.caption p { font-size:1.2rem; color:#e5e7eb; max-width:800px; margin:0 auto; }
+</style>
+</head>
+<body>
+<div id="slideshow"></div>
+<script>
+const lang = localStorage.getItem('app_lang') || 'id';
+let slides=[], index=0;
+
+async function loadSlides(){
+  try{
+    const res=await fetch(`./api.php?action=getFacilities&lang=${lang}&_=${Date.now()}`);
+    const data=await res.json();
+    if(data.status==='success' && data.data.length > 0) {
+        slides=data.data; 
+        buildSlides(); 
+        start();
+    } else {
+        document.body.innerHTML = '<div class="flex h-screen items-center justify-center text-gray-500">No Facilities Data</div>';
+    }
+  }catch(e){ console.log(e); }
+}
+
+function buildSlides(){
+  const c = document.getElementById('slideshow');
+  c.innerHTML = '';
+  slides.forEach((s,i)=>{
+    const d=document.createElement('div');
+    d.className='slide'+(i===0?' active':'');
+    
+    // LOGIKA BARU: Cek show_description
+    let captionHTML = '';
+    if (s.show_description == 1) {
+        captionHTML = `
+          <div class="caption">
+            <h2>${s.name}</h2>
+            <p>${s.description || ''}</p>
+          </div>
+        `;
+    }
+
+    d.innerHTML=`<img src="${s.icon_path}">${captionHTML}`;
+    c.appendChild(d);
+  });
+}
+
+function start(){
+  setInterval(()=>{
+    document.querySelectorAll('.slide')[index].classList.remove('active');
+    index=(index+1)%slides.length;
+    document.querySelectorAll('.slide')[index].classList.add('active');
+  }, 5000);
+}
+
+document.addEventListener('keydown', (e) => {
+    if(e.key==='Backspace'||e.key==='Escape'||e.key==='Enter') window.location.href='index.php';
+});
+
+loadSlides();
+</script>
+</body>
+</html>
