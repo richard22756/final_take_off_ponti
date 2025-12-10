@@ -5,81 +5,233 @@
 <title>Welcome</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-body { margin:0; overflow:hidden; background:#111; color:#fff; font-family:sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; }
-.card { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); padding: 40px; border-radius: 20px; max-width: 900px; width: 90%; display:flex; gap: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-.btn { background: #facc15; color: black; padding: 10px 30px; border-radius: 8px; font-weight: bold; text-decoration: none; display: inline-block; margin-top: 20px; }
-.btn:focus { box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.5); outline: none; background: white; }
+body {
+    margin: 0;
+    overflow: hidden;
+    font-family: sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
 
-/* STYLE BARU UNTUK TOMBOL BAHASA */
+.tv-screen-container {
+    width: 100vw;
+    height: calc(100vw * 9 / 16); /* Trik rasio 16:9 */
+    max-height: 100vh;
+    max-width: calc(100vh * 16 / 9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    background-color: #d32f2f; /* Merah latar belakang */
+    background-image: none; /* Menghindari background gambar sebelumnya */
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center center;
+    overflow: hidden;
+}
+
+.content-wrapper {
+    display: flex; /* Menggunakan Flexbox untuk tata letak dua kolom */
+    justify-content: space-between; /* Membuat kolom kiri dan kanan terpisah */
+    width: 100%;
+    height: 100%;
+    padding: 20px;
+}
+
+#sidebar {
+    width: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* <-- ini kuncinya */
+    align-items: center;
+    gap: 1rem;
+    height: 100%; /* <-- pastiin dia punya tinggi buat bisa centering */
+}
+
+
+#main-content {
+    flex: 1; /* Menyebar sisa ruang yang tersedia */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.card {
+    background: rgba(0, 0, 0, 0.185); /* Ungu dengan transparansi untuk card */
+    backdrop-filter: blur(7px); /* Efek blur pada background */
+    padding: 15px;
+    border-radius: 20px;
+    max-width: 900px;
+    width: 100%;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); /* Shadow untuk card */
+    z-index: 1; /* Memastikan card muncul di atas background */
+}
+
+#content {
+    max-height: 100vh;
+    overflow-y: auto;
+}
+
+.btn {
+    background: #FFAD00; /* Ungu dengan transparansi untuk card */
+    color: black;
+    padding: 12px 40px;
+    border-radius: 50px;
+    font-weight: bold;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+}
+
+.btn:focus, .btn:hover {
+    box-shadow: 0 0 15px rgba(250, 204, 21, 0.6);
+    transform: scale(1.05);
+    background: #fff;
+    border-color: #facc15;
+}
+
 .lang-btn {
     width: 60px;
     height: 60px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 3px solid transparent;
+    padding: 0;
+    overflow: hidden;
+    border: 3px solid rgba(255, 255, 255, 0.2);
     transition: all 0.2s ease;
     cursor: pointer;
+    opacity: 0.7;
 }
+
+.lang-btn img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
 .lang-btn.active, .lang-btn:focus {
-    background: #facc15;
-    color: black;
-    border-color: #fff;
+    border-color: #facc15;
+    transform: scale(1.15);
+    opacity: 1;
+    box-shadow: 0 0 15px rgba(250, 204, 21, 0.5);
     outline: none;
-    transform: scale(1.1);
-    box-shadow: 0 0 10px rgba(250, 204, 21, 0.7);
 }
+
+/* Styling untuk logo di pojok kanan atas */
+#logo {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 150px; /* Sesuaikan ukuran logo */
+    height: auto;
+    z-index: 999; /* Pastikan logo berada di depan */
+}
+
 </style>
 </head>
 <body>
-    <div id="content" class="card hidden"></div>
-    <script>
+
+    <div class="tv-screen-container">
+        <!-- Logo Harris Hotels di pojok kanan atas -->
+
+        <!-- Konten Latar Belakang -->
+        <div class="content-wrapper">
+            <!-- Sidebar untuk tombol -->
+            <div id="sidebar" class="flex flex-col gap-6">
+                <a href="#" id="guestLetter" class="btn">Guest Letter &rarr;</a>
+                <a href="#" id="generalInfo" class="btn">General Information &rarr;</a>
+                <a href="#" id="whatsOn" class="btn">What's On &rarr;</a>
+                <a href="index.php" id="btn" tabindex="3" class="btn">Continue &rarr;</a>
+            </div>
+
+            <!-- Main Content di sebelah kanan -->
+            <div id="main-content" class="flex-1 flex flex-col justify-center gap-4">
+                <div id="content" class="card hidden">
+                    <img id="greeting-image" src="" class="w-1/3 object-cover rounded-lg shadow-lg">
+                    <div class="flex-1 flex flex-col justify-center">
+                        <div id="greeting-text-area"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <img id="logo" src="img/HarrisHotels_Logo_png.png" alt="Harris Hotels Logo">
+    </div>
+
+<script>
     const STORAGE_LANG_KEY = 'app_lang';
-    let currentLang = localStorage.getItem(STORAGE_LANG_KEY) || 'id'; // Default 'id'
+    let currentLang = localStorage.getItem(STORAGE_LANG_KEY) || 'en'; 
     
-    // Fungsi untuk menyimpan bahasa dan memuat ulang konten sambutan
     function setLanguage(lang) {
-        if (lang === currentLang) return; // Hindari reload jika sama
+        if (lang === currentLang) return;
         
         localStorage.setItem(STORAGE_LANG_KEY, lang);
         currentLang = lang;
         
-        // Muat ulang hanya konten sambutan, bukan seluruh halaman
         loadGreetingContent(lang);
         updateButtonState(lang);
     }
+
+    function setContent(title, content) {
+        document.getElementById('greeting-text-area').innerHTML = `
+            <h1 class="text-4xl font-bold text-orange-500 mb-3">${title}</h1>
+            <div class="text-white text-lg leading-relaxed mb-3">${content}</div>
+        `;
+        document.getElementById('content').classList.remove('hidden');
+    }
+
+    document.getElementById('guestLetter').addEventListener('click', (e) => {
+    e.preventDefault();
+    if (!lastGreetingItem) return;
+
+    setContent(
+        lastGreetingItem.title,
+        (lastGreetingItem.content || "").replace(/\n/g, "<br>")
+    );
+    });
+
+
+
+    document.getElementById('generalInfo').addEventListener('click', () => {
+        setContent("General Information", "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.");
+    });
+
+    document.getElementById('whatsOn').addEventListener('click', () => {
+        setContent("What's On", "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book.");
+    });
+
+
     
-    // Fungsi untuk mendapatkan data sambutan dari API (sebelumnya bernama load)
     async function loadGreetingContent(lang) {
         try {
-            // Ambil greeting dari API dengan parameter bahasa
             const res = await fetch(`./api.php?action=getCustomGreeting&lang=${lang}&_=${Date.now()}`);
             const d = await res.json();
             const item = d.data;
+            lastGreetingItem = item;
+
+            const tvScreenContainer = document.querySelector('.tv-screen-container');
+            tvScreenContainer.style.backgroundImage = `url(${item.image})`;
             
-            // Render konten sambutan
             document.getElementById('greeting-text-area').innerHTML = `
-                <h1 class="text-4xl font-bold text-yellow-400 mb-4">${item.title}</h1>
-                <div class="text-gray-200 text-lg leading-relaxed mb-6">${item.content.replace(/\n/g, '<br>')}</div>
+                <h1 class="text-4xl font-bold text-orange-500 mb-3">${item.title}</h1>
+                <div class="text-white text-lg leading-relaxed mb-3">${item.content.replace(/\n/g, '<br>')}</div>
             `;
             
-            // Pastikan gambar diupdate jika URL-nya berubah (meski biasanya tidak)
-            document.getElementById('greeting-image').src = item.image;
-            
             document.getElementById('content').classList.remove('hidden');
+
+            // Update teks tombol Lanjut sesuai bahasa
+            // const btnText = (lang === 'en') ? 'Continue &rarr;' : 'Lanjut &rarr;';
+            // document.getElementById('btn').innerHTML = btnText;
             
         } catch(e) { 
-            // Jika gagal load API, langsung ke index.php
-            console.error("Failed to load greeting:", e);
             window.location.href='index.php'; 
         }
     }
 
-    // Fungsi untuk memperbarui status tombol
     function updateButtonState(lang) {
         document.querySelectorAll('.lang-btn').forEach(btn => {
             btn.classList.remove('active');
@@ -87,55 +239,59 @@ body { margin:0; overflow:hidden; background:#111; color:#fff; font-family:sans-
                 btn.classList.add('active');
             }
         });
-        // Fokuskan tombol Lanjut setelah konten dimuat
-        setTimeout(() => {
-            const focusedBtn = document.querySelector('.lang-btn.active') || document.getElementById('btn');
-            if (focusedBtn) focusedBtn.focus();
-        }, 100);
     }
-    
-    // Fungsi utama yang dipanggil saat DOM siap
+
     async function load() {
-        // Render kerangka awal (termasuk tombol bahasa)
         document.getElementById('content').innerHTML = `
             <img id="greeting-image" src="" class="w-1/3 object-cover rounded-lg shadow-lg">
             <div class="flex-1 flex flex-col justify-center">
-                <div id="greeting-text-area">
-                    </div>
-                <div class="mt-4 flex gap-6 items-center">
-                    <div><a href="index.php" id="btn" class="btn">Lanjut &rarr;</a></div>
-                    
-                    <div class="flex space-x-3">
-                        <button class="lang-btn" data-lang="id" tabindex="1" onclick="setLanguage('id')">ID</button>
-                        <button class="lang-btn" data-lang="en" tabindex="2" onclick="setLanguage('en')">EN</button>
-                    </div>
+                <div id="greeting-text-area"></div>
+                <div class="mt-8 flex items-center gap-6">
                 </div>
             </div>
         `;
 
-        // Muat konten awal sesuai bahasa yang sudah tersimpan
         await loadGreetingContent(currentLang);
         updateButtonState(currentLang);
         
-        // Sembunyikan loading screen Android
+        setTimeout(() => {
+            const activeBtn = document.querySelector('.lang-btn.active');
+            if(activeBtn) activeBtn.focus();
+        }, 200);
+
         if(window.AndroidBridge && typeof window.AndroidBridge.hideLoadingScreen === 'function') {
             window.AndroidBridge.hideLoadingScreen();
         }
     }
-    
-    // Global Keydown Handler (untuk remote TV)
+
     document.addEventListener('keydown', (e) => {
-        if(e.key === 'Enter') {
-            if (document.activeElement.id === 'btn') {
-                 window.location.href='index.php';
-            } else if (document.activeElement.classList.contains('lang-btn')) {
-                // Trigger onclick handler jika Enter ditekan pada tombol bahasa
-                document.activeElement.click(); 
+        if (e.key === 'ArrowRight') {
+            const active = document.activeElement;
+            if (active.classList.contains('lang-btn') && active.dataset.lang === 'id') {
+                document.querySelector('[data-lang="en"]').focus();
+            } else if (active.dataset.lang === 'en') {
+                document.getElementById('btn').focus();
             }
         }
+        if (e.key === 'ArrowLeft') {
+            const active = document.activeElement;
+            if (active.id === 'btn') {
+                document.querySelector('[data-lang="en"]').focus();
+            } else if (active.dataset.lang === 'en') {
+                document.querySelector('[data-lang="id"]').focus();
+            }
+        }
+
+        // if(e.key === 'Enter') {
+        //     if (document.activeElement.id === 'btn') {
+        //          window.location.href='index.php';
+        //     } else if (document.activeElement.classList.contains('lang-btn')) {
+        //         document.activeElement.click(); 
+        //     }
+        // }
     });
     
     load();
-    </script>
+</script>
 </body>
 </html>

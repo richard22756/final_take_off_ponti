@@ -60,28 +60,194 @@ try {
             http_response_code(400); echo json_encode(['STATUS' => 'FAIL', 'description' => 'Invalid JSON.', 'message' => 'Failed']); exit;
         }
         switch ($action) {
+            // case 'vhp_checkin':
+                
+            //     if ($action === 'vhp_checkin') {
+            //         handleVHPAuth($db);
+            //         $input = json_decode(file_get_contents('php://input'), true);
+
+            //         // Validasi input JSON
+            //         if (!is_array($input)) {
+            //             http_response_code(400);
+            //             echo json_encode(['STATUS' => 'FAIL', 'description' => 'Invalid JSON.', 'message' => 'Failed']);
+            //             exit;
+            //         }
+
+            //         // Ambil data dari request
+            //         $roomNo = $input['roomNo'] ?? null;
+            //         $firstName = $input['firstName'] ?? '';
+            //         $lastName = $input['lastName'] ?? '';
+            //         $checkinDate = $input['checkinDate'] ?? null;
+            //         $checkoutDate = $input['checkoutDate'] ?? null; // Checkout date untuk check-in yang benar
+
+            //         // Validasi roomNo
+            //         if (!$roomNo) {
+            //             http_response_code(400);
+            //             echo json_encode(['STATUS' => 'FAIL', 'description' => 'Missing roomNo.', 'message' => 'Failed']);
+            //             exit;
+            //         }
+
+            //         // Format nama tamu
+            //         $fullName = trim("$firstName $lastName");
+            //         if (empty($fullName)) $fullName = "Room Guests of $roomNo";
+
+            //         // Format waktu check-in jika ada
+            //         $checkinTimeVal = 'NOW()';
+            //         if ($checkinDate) {
+            //             $dt = DateTime::createFromFormat('d/m/Y H:i:s', $checkinDate);
+            //             if ($dt) $checkinTimeVal = "'" . $dt->format('Y-m-d H:i:s') . "'";
+            //         }
+
+            //         // Update status check-out untuk room yang sudah ter-check-in
+            //         $db->prepare("UPDATE guest_checkin SET status='checked_out', checkout_time=NOW() WHERE room_number = ? AND status='checked_in'")->execute([$roomNo]);
+
+            //         // SQL untuk insert check-in tamu baru
+            //         $sql = "INSERT INTO guest_checkin (room_number, guest_name, checkin_time, status, checkout_time) VALUES (?, ?, " . ($checkinTimeVal === 'NOW()' ? 'NOW()' : '?') . ", 'checked_in', ?)";
+            //         $params = [$roomNo, $fullName];
+            //         if ($checkinTimeVal !== 'NOW()') $params[] = trim($checkinTimeVal, "'");
+            //         $params[] = $checkoutDate ? $checkoutDate : 'NULL';
+
+            //         $stmt = $db->prepare($sql);
+            //         $stmt->execute($params);
+
+            //         echo json_encode(['STATUS' => 'SUCCESS', 'description' => 'Room Checked In', 'message' => 'Success']);
+            //         exit;
+            //     }
+
             case 'vhp_checkin':
-            case 'vhp_modifyguest':
-                $roomNo = $input['roomNo'] ?? null;
-                $firstName = $input['firstName'] ?? '';
-                $lastName = $input['lastName'] ?? '';
-                $checkinDate = $input['checkinDate'] ?? null;
-                if (!$roomNo) { http_response_code(400); echo json_encode(['STATUS' => 'FAIL', 'description' => 'Missing roomNo.', 'message' => 'Failed']); exit; }
-                $fullName = trim("$firstName $lastName");
-                if (empty($fullName)) $fullName = "Room Guests of $roomNo";
-                $checkinTimeVal = 'NOW()';
-                if ($checkinDate) {
-                    $dt = DateTime::createFromFormat('d/m/Y H:i:s', $checkinDate);
-                    if ($dt) $checkinTimeVal = "'" . $dt->format('Y-m-d H:i:s') . "'";
+                if ($action === 'vhp_checkin') {
+                    handleVHPAuth($db);
+                    $input = json_decode(file_get_contents('php://input'), true);
+
+                    // Validasi input JSON
+                    if (!is_array($input)) {
+                        http_response_code(400);
+                        echo json_encode(['STATUS' => 'FAIL', 'description' => 'Invalid JSON.', 'message' => 'Failed']);
+                        exit;
+                    }
+
+                    // Ambil data dari request
+                    $roomNo = $input['roomNo'] ?? null;
+                    $firstName = $input['firstName'] ?? '';
+                    $lastName = $input['lastName'] ?? '';
+                    $checkinDate = $input['checkinDate'] ?? null;
+                    $checkoutDate = $input['checkoutDate'] ?? null; // Checkout date untuk check-in yang benar
+
+                    // Validasi roomNo
+                    if (!$roomNo) {
+                        http_response_code(400);
+                        echo json_encode(['STATUS' => 'FAIL', 'description' => 'Missing roomNo.', 'message' => 'Failed']);
+                        exit;
+                    }
+
+                    // Format nama tamu
+                    $fullName = trim("$firstName $lastName");
+                    if (empty($fullName)) $fullName = "Room Guests of $roomNo";
+
+                    // Format waktu check-in jika ada
+                    $checkinTimeVal = 'NOW()';
+                    if ($checkinDate) {
+                        // Pastikan formatnya benar dengan DateTime
+                        $dt = DateTime::createFromFormat('d/m/Y H:i:s', $checkinDate);
+                        if ($dt) {
+                            $checkinTimeVal = "'" . $dt->format('Y-m-d H:i:s') . "'";
+                        } else {
+                            http_response_code(400);
+                            echo json_encode(['STATUS' => 'FAIL', 'description' => 'Invalid checkinDate format. Please use d/m/Y H:i:s.', 'message' => 'Failed']);
+                            exit;
+                        }
+                    }
+
+                    // Format checkoutDate jika ada
+                    $checkoutTimeVal = 'NULL';
+                    if ($checkoutDate) {
+                        // Pastikan formatnya benar dengan DateTime
+                        $dtCheckout = DateTime::createFromFormat('d/m/Y H:i:s', $checkoutDate);
+                        if ($dtCheckout) {
+                            $checkoutTimeVal = "'" . $dtCheckout->format('Y-m-d H:i:s') . "'";
+                        } else {
+                            http_response_code(400);
+                            echo json_encode(['STATUS' => 'FAIL', 'description' => 'Invalid checkoutDate format. Please use d/m/Y H:i:s.', 'message' => 'Failed']);
+                            exit;
+                        }
+                    }
+
+                    // Update status check-out untuk room yang sudah ter-check-in
+                    $db->prepare("UPDATE guest_checkin SET status='checked_out', checkout_time=NOW() WHERE room_number = ? AND status='checked_in'")->execute([$roomNo]);
+
+                    // SQL untuk insert check-in tamu baru
+                    $sql = "INSERT INTO guest_checkin (room_number, guest_name, checkin_time, status, checkout_time) VALUES (?, ?, " . ($checkinTimeVal === 'NOW()' ? 'NOW()' : '?') . ", 'checked_in', $checkoutTimeVal)";
+                    $params = [$roomNo, $fullName];
+                    if ($checkinTimeVal !== 'NOW()') $params[] = trim($checkinTimeVal, "'");
+                    
+                    $stmt = $db->prepare($sql);
+                    $stmt->execute($params);
+
+                    echo json_encode(['STATUS' => 'SUCCESS', 'description' => 'Room Checked In', 'message' => 'Success']);
+                    exit;
                 }
-                $db->prepare("UPDATE guest_checkin SET status='checked_out', checkout_time=NOW() WHERE room_number = ? AND status='checked_in'")->execute([$roomNo]);
-                $sql = "INSERT INTO guest_checkin (room_number, guest_name, checkin_time, status) VALUES (?, ?, " . ($checkinTimeVal === 'NOW()' ? 'NOW()' : '?') . ", 'checked_in')";
-                $params = [$roomNo, $fullName];
-                if ($checkinTimeVal !== 'NOW()') $params[] = trim($checkinTimeVal, "'");
-                $stmt = $db->prepare($sql);
-                $stmt->execute($params);
-                echo json_encode(['STATUS' => 'SUCCESS', 'description' => 'Room Checked In / Modified', 'message' => 'Success']);
-                break;
+
+            case 'vhp_modifyguest':
+
+                if ($action === 'vhp_modifyguest') {
+                    handleVHPAuth($db);
+                    $input = json_decode(file_get_contents('php://input'), true);
+
+                    // Validasi input JSON
+                    if (!is_array($input)) {
+                        http_response_code(400);
+                        echo json_encode(['STATUS' => 'FAIL', 'description' => 'Invalid JSON.', 'message' => 'Failed']);
+                        exit;
+                    }
+
+                    // Ambil data dari request
+                    $roomNo = $input['roomNo'] ?? null;
+                    $firstName = $input['firstName'] ?? '';
+                    $lastName = $input['lastName'] ?? '';
+                    $modifyDate = $input['modifyDate'] ?? null; // Modify date untuk memperpanjang masa inap
+
+                    // Validasi roomNo
+                    if (!$roomNo) {
+                        http_response_code(400);
+                        echo json_encode(['STATUS' => 'FAIL', 'description' => 'Missing roomNo.', 'message' => 'Failed']);
+                        exit;
+                    }
+
+                    // Format nama tamu
+                    $fullName = trim("$firstName $lastName");
+                    if (empty($fullName)) $fullName = "Room Guests of $roomNo";
+
+                    // Format modify date jika ada
+                    // $modifyTimeVal = 'NOW()';
+                    // if ($modifyDate) {
+                    //     $dt = DateTime::createFromFormat('d/m/Y H:i:s', $modifyDate);
+                    //     if ($dt) $modifyTimeVal = "'" . $dt->format('Y-m-d H:i:s') . "'";
+                    // }
+
+                    $modifyTimeVal = 'NOW()';
+                    if ($modifyDate) {
+                        // Pastikan formatnya benar dengan DateTime
+                        $dt = DateTime::createFromFormat('d/m/Y H:i:s', $modifyDate);
+                        if ($dt) {
+                            $modifyTimeVal = "'" . $dt->format('Y-m-d H:i:s') . "'";
+                        } else {
+                            http_response_code(400);
+                            echo json_encode(['STATUS' => 'FAIL', 'description' => 'Invalid modifyDate format. Please use d/m/Y H:i:s.', 'message' => 'Failed']);
+                            exit;
+                        }
+                    }
+
+                    // Update status tamu yang sudah ada untuk room yang dimodifikasi
+                    $sql = "UPDATE guest_checkin SET guest_name = ?, checkout_time = ? WHERE room_number = ? AND status = 'checked_in'";
+                    $params = [$fullName, $modifyTimeVal, $roomNo];
+                    
+                    $stmt = $db->prepare($sql);
+                    $stmt->execute($params);
+
+                    echo json_encode(['STATUS' => 'SUCCESS', 'description' => 'Guest Information Modified', 'message' => 'Success']);
+                    exit;
+                }
+
             case 'vhp_checkout':
                 $roomNo = $input['roomNo'] ?? null;
                 if (!$roomNo) { http_response_code(400); echo json_encode(['STATUS' => 'FAIL', 'description' => 'Missing roomNo.', 'message' => 'Failed']); exit; }

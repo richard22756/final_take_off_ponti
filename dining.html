@@ -116,11 +116,17 @@ async function load() {
   }
 }
 
+let debounceTimeout;
 function add(i) {
-  if(!cart[i.id]) cart[i.id]={...i, qty:0};
-  cart[i.id].qty++; 
-  render();
+    clearTimeout(debounceTimeout);
+    
+    debounceTimeout = setTimeout(() => {
+        if (!cart[i.id]) cart[i.id] = { ...i, qty: 0 };
+        cart[i.id].qty++;
+        render();
+    }, 300); 
 }
+
 
 function render() {
   const c = document.getElementById('cart-list'); 

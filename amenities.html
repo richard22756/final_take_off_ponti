@@ -66,28 +66,72 @@ async function load() {
   } catch(e){}
 }
 
-function add(i) {
-  if(!cart[i.id]) cart[i.id]={...i, qty:0};
-  cart[i.id].qty++; render();
+let lastAddAt = 0;
+function add(i){
+  const now = Date.now();
+  if (now - lastAddAt < 250) return;
+  lastAddAt = now;
+
+  if(!cart[i.id]) cart[i.id] = {...i, qty:0};
+  cart[i.id].qty++;
+  render();
 }
 
+
 function render() {
-  const c = document.getElementById('cart-list'); c.innerHTML='';
-  for(let k in cart) {
-    const i=cart[k];
+  // simpan fokus kalau lagi di tombol qty
+  let prevFocus = null;
+  const ae = document.activeElement;
+  if (ae && ae.classList && ae.classList.contains('qty-btn')) {
+    prevFocus = { id: ae.dataset.id, delta: ae.dataset.delta };
+  }
+
+  const c = document.getElementById('cart-list');
+  c.innerHTML = '';
+
+  for (let k in cart) {
+    const i = cart[k];
     const div = document.createElement('div');
     div.className = "flex justify-between items-center bg-gray-800 p-3 rounded";
     div.innerHTML = `
+      <div class="flex flex-col">
         <span class="font-bold text-sm">${i.name}</span>
-        <div class="flex items-center gap-2">
-            <button class="qty-btn" onclick="updateQty(${i.id}, -1)">-</button>
-            <span class="w-4 text-center">${i.qty}</span>
-            <button class="qty-btn" onclick="updateQty(${i.id}, 1)">+</button>
-        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button class="qty-btn" tabindex="0" data-id="${i.id}" data-delta="-1">-</button>
+        <span class="w-4 text-center">${i.qty}</span>
+        <button class="qty-btn" tabindex="0" data-id="${i.id}" data-delta="1">+</button>
+      </div>
     `;
     c.appendChild(div);
   }
+
+  c.querySelectorAll('.qty-btn').forEach(btn => {
+    btn.onclick = (e) => {
+      e.preventDefault(); e.stopPropagation();
+      updateQty(Number(btn.dataset.id), Number(btn.dataset.delta));
+    };
+    btn.onkeydown = (e) => {
+      if (e.key === 'Enter' || e.keyCode === 23) {
+        e.preventDefault(); e.stopPropagation();
+        updateQty(Number(btn.dataset.id), Number(btn.dataset.delta));
+      }
+    };
+  });
+
+  // balikin fokus ke tombol yg sama
+  keepCartFocus(prevFocus);
 }
+
+
+function keepCartFocus(prev) {
+  if (!prev) return;
+  const { id, delta } = prev;
+  const btn = document.querySelector(`.qty-btn[data-id="${id}"][data-delta="${delta}"]`);
+  if (btn) btn.focus();
+}
+
+
 
 window.updateQty = (id, delta) => {
     if(cart[id]) {

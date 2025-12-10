@@ -1,10 +1,12 @@
 <?php
 define('DB_HOST', 'localhost');
 define('DB_USER', 'phpmyadmin');
-define('DB_PASS', 'iptvmma2025');
+define('DB_PASS', 'mmaiptv2024');
 define('DB_NAME', 'take_off');
 
-define('BASE_URL', 'http://192.168.0.241/AHFix/');
+define('BASE_URL', 'http://202.8.28.194/AHFix/');
+// define('BASE_URL', 'http://10.95.216.63/AHFix/');
+
 
 define('VHP_USER', 'vhp_admin');
 define('VHP_PASS', 'PassHotelRahasia123!');

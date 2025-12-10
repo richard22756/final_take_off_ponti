@@ -95,6 +95,15 @@ body { font-family: 'Inter', sans-serif; overflow: hidden; }
 .menu-item.focused span { color: #fff; }
 
 .hidden { display: none; }
+#boot-loading{
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.85);
+}
 .loader {
     border: 4px solid #f3f3f3;
     border-top: 4px solid #3498db;
@@ -166,6 +175,9 @@ body { font-family: 'Inter', sans-serif; overflow: hidden; }
 </head>
 <body class="bg-gray-900 text-white h-screen w-screen overflow-hidden">
 
+<div id="boot-loading">
+</div>
+
 <div id="launcher-container" class="relative h-full w-full bg-launcher hidden">
     <div class="absolute inset-0 bg-overlay"></div>
     <div class="relative z-10 h-full w-full flex flex-col p-8 md:p-12">
@@ -214,7 +226,7 @@ body { font-family: 'Inter', sans-serif; overflow: hidden; }
     </div>
 </div>
 
-<div id="unregistered-screen" class="absolute inset-0 bg-gray-800 z-50 flex justify-center items-center p-10 text-center">
+<div id="unregistered-screen" class="absolute inset-0 bg-gray-800 z-50 flex justify-center items-center p-10 text-center hidden">
     <div>
         <h1 class="register-title mb-4">Perangkat Belum Terdaftar</h1>
         <p class="register-desc mb-8">Hubungi admin hotel dan berikan kode unik di bawah ini:</p>
@@ -251,6 +263,7 @@ let currentGuestName = "Fetching...";
 const DEFAULT_FOCUS_KEY = 'facilities';
 
 // === Elemen utama ===
+const bootLoading = document.getElementById('boot-loading');
 const launcherContainer = document.getElementById('launcher-container');
 const disabledScreen = document.getElementById('disabled-screen');
 const unregisteredScreen = document.getElementById('unregistered-screen');
@@ -374,9 +387,11 @@ async function loadLauncherData(deviceID, lang) {
       launcherContainer.classList.add('hidden');
       disabledScreen.classList.remove('hidden');
       unregisteredScreen.classList.add('hidden');
+      bootLoading.style.display = 'none';
       if (window.AndroidBridge && typeof window.AndroidBridge.hideLoadingScreen === 'function') {
         window.AndroidBridge.hideLoadingScreen();
       }
+      bootLoading.style.display = 'none';
       return;
     }
 
@@ -428,6 +443,7 @@ async function loadLauncherData(deviceID, lang) {
     launcherContainer.classList.remove('hidden');
     unregisteredScreen.classList.add('hidden');
     disabledScreen.classList.add('hidden');
+    bootLoading.style.display = 'none';
 
     setFocus(currentFocusIndex);
     setTimeout(() => {
@@ -447,6 +463,8 @@ async function loadLauncherData(deviceID, lang) {
     }
 
   } catch (err) {
+    bootLoading.style.display = 'none';
+    unregisteredScreen.classList.remove('hidden');
     unregisteredScreen.classList.remove('hidden');
     pollingStatus.textContent = `Error: ${err.message}`;
     if (window.AndroidBridge && typeof window.AndroidBridge.hideLoadingScreen === 'function') {
@@ -583,18 +601,26 @@ function updateClock(weatherData) {
 // === Boot ===
 document.addEventListener('DOMContentLoaded', () => {
   const id = localStorage.getItem(STORAGE_DEVICE_ID_KEY);
-  const initialLang = getCurrentLang(); 
+  const initialLang = getCurrentLang();
+
+  bootLoading.style.display = 'flex';
+  launcherContainer.classList.add('hidden');
+  unregisteredScreen.classList.add('hidden');
+  disabledScreen.classList.add('hidden');
+  bootLoading.style.display = 'none';
 
   if (id) {
-    unregisteredScreen.classList.add('hidden');
     currentDeviceID = id;
-    loadLauncherData(currentDeviceID, initialLang); 
+    loadLauncherData(currentDeviceID, initialLang);
   } else {
-    if (window.AndroidBridge && typeof window.AndroidBridge.hideLoadingScreen === 'function') {
-        window.AndroidBridge.hideLoadingScreen();
-    }
-    const code = getStableRegistrationCode(); 
+    bootLoading.style.display = 'none';
+    const code = getStableRegistrationCode();
+    unregisteredScreen.classList.remove('hidden');
     if (code) startPolling(code);
+
+    if (window.AndroidBridge && typeof window.AndroidBridge.hideLoadingScreen === 'function') {
+      window.AndroidBridge.hideLoadingScreen();
+    }
   }
 });
 
