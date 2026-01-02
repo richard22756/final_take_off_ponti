@@ -30,6 +30,24 @@ if (!function_exists('get_full_url')) {
     }
 }
 
+    //FOR PUBLIC IP
+
+// if (!function_exists('get_full_url')) {
+//     function get_full_url($path) {
+//         // Jika path kosong, kembalikan string kosong
+//         if (empty($path)) return '';
+        
+//         // Periksa apakah path sudah merupakan URL lengkap (menggunakan http:// atau https://)
+//         if (substr($path, 0, 7) === 'http://' || substr($path, 0, 8) === 'https://') {
+//             return $path;
+//         }
+        
+//         // Gabungkan BASE_URL dengan path relatif
+//         return rtrim(BASE_URL, '/') . '/' . ltrim($path, '/');
+//     }
+// }
+
+
 function redirect($url) {
     header("Location: $url");
     exit;

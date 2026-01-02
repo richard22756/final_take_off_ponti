@@ -137,6 +137,35 @@ body { font-family: 'Inter', sans-serif; overflow: hidden; }
     100% {transform:translateX(-100%);}
 }
 
+/* === Notification Card === */
+.notif-card{
+  background: rgba(0, 0, 0, 0.20);
+  backdrop-filter: blur(8px);
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.55);
+  border: 1px solid rgba(255,255,255,0.12);
+}
+
+/* Tombol OK (override karena kamu ada rule *:focus { box-shadow:none!important } ) */
+.notif-btn{
+  background: #facc15;
+  color: #111;
+  padding: 12px 44px;
+  border-radius: 9999px;
+  font-weight: 700;
+  border: 2px solid transparent;
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease;
+}
+
+#notification-ok:focus{
+  box-shadow: 0 0 15px rgba(250, 204, 21, 0.6) !important;
+  transform: scale(1.05);
+  background: #fff;
+  border-color: #facc15;
+}
+
+
 .header-time { font-size:2.5rem; line-height:1.1; font-weight:700; }
 .header-date { font-size:1rem; color:#d1d5db; }
 .weather-icon {
@@ -226,6 +255,28 @@ body { font-family: 'Inter', sans-serif; overflow: hidden; }
     </div>
 </div>
 
+<!-- Notification Popup (Card) -->
+<div id="notification-popup" class="hidden fixed inset-0 z-[9999] flex items-center justify-center">
+  <!-- backdrop -->
+  <div class="absolute inset-0 bg-black bg-opacity-50"></div>
+
+  <!-- card -->
+  <div class="relative notif-card w-11/12 max-w-4xl">
+    <h2 id="notification-title" class="text-3xl font-bold text-yellow-400 mb-3">Notification</h2>
+
+    <div id="notification-text" class="text-white text-lg leading-relaxed whitespace-pre-line">
+      Pesan notifikasi di sini...
+    </div>
+
+    <div class="mt-8 flex justify-end">
+      <button id="notification-ok" type="button" class="notif-btn" tabindex="0">
+        OK
+      </button>
+    </div>
+  </div>
+</div>
+
+
 <div id="unregistered-screen" class="absolute inset-0 bg-gray-800 z-50 flex justify-center items-center p-10 text-center hidden">
     <div>
         <h1 class="register-title mb-4">Perangkat Belum Terdaftar</h1>
@@ -279,6 +330,16 @@ const dateEl = document.getElementById('date-display');
 const weatherIconEl = document.getElementById('weather-icon-display'); 
 const navArrowLeft = document.getElementById('nav-arrow-left');
 const navArrowRight = document.getElementById('nav-arrow-right');
+
+const notificationPopup = document.getElementById('notification-popup');
+const notificationTitle = document.getElementById('notification-title');
+const notificationText = document.getElementById('notification-text');
+const notificationOkBtn = document.getElementById('notification-ok');
+
+let notificationTimeoutId = null;
+let lastFocusedElementBeforeNotif = null;
+let lastNotificationCache = null; // opsional: anti spam notif yang sama
+
 
 // === Fungsi dasar ===
 function clearLocalStorage() {
@@ -457,6 +518,7 @@ async function loadLauncherData(deviceID, lang) {
     setInterval(() => updateClock(weatherInfo), 1000); 
     setInterval(pollGuestInfo, GUEST_POLLING_INTERVAL);
     loadDynamicBackground();
+    startNotificationPolling();
 
     if (window.AndroidBridge && typeof window.AndroidBridge.hideLoadingScreen === 'function') {
         window.AndroidBridge.hideLoadingScreen();
@@ -521,7 +583,82 @@ function handleItemClick(item) {
     }
 }
 
+
+// function buildMainMenu(apps) {
+//   menuItemsContainer.innerHTML = '';  // Clear existing menu items
+  
+//   apps.forEach((app, i) => {
+//     const el = document.createElement('div');
+//     el.className = 'menu-item';
+//     el.tabIndex = 0; 
+//     el.dataset.index = i;
+
+//     // Menentukan apakah menu item mengarah ke halaman internal (data-page) atau URL eksternal (data-pkg)
+//     if (app.app_key === 'information') {
+//       el.dataset.page = 'information.html';  // Halaman internal
+//     } else if (app.app_key === 'dining') {
+//       el.dataset.page = 'dining.html'; // Halaman internal
+//     } else if (app.app_key === 'amenities') {
+//       el.dataset.page = 'amenities.html'; // Halaman internal
+//     } else if (app.app_key === 'facilities') {
+//       el.dataset.page = 'facilities.html'; // Halaman internal
+//     } else {
+//       // Jika bukan halaman internal, set data-pkg dengan URL eksternal
+//       el.dataset.pkg = app.android_package || '';  // URL eksternal, misalnya 'https://www.youtube.com/'
+//     }
+    
+//     el.dataset.label = app.app_name || 'App';
+//     el.innerHTML = `<img src="${app.icon_path}" class="menu-item-icon" alt=""><span>${app.app_name}</span>`;
+    
+//     // Event listener untuk handle klik item menu
+//     el.addEventListener('click', () => { handleItemClick(el); });
+//     el.addEventListener('focus', () => { setFocus(i); scrollMenu(); });
+    
+//     menuItemsContainer.appendChild(el);  // Append item ke menu
+//   });
+
+//   // Setelah menu dibuat, update menu item
+//   menuItems = document.querySelectorAll('.menu-item');
+//   updateArrowVisibility();  // Update visibilitas panah navigasi
+// }
+
+// function handleItemClick(item) {
+//     if (!item) return;
+
+//     // Jika ada data-page (menu internal), buka halaman internal
+//     if (item.dataset.page) {
+//         window.location.href = item.dataset.page; // Arahkan ke halaman internal seperti 'information.html', 'facilities.html'
+//     }
+//     // Jika ada data-pkg (URL eksternal), buka URL di browser
+//     else if (item.dataset.pkg) {
+//         console.log("Navigating to:", item.dataset.pkg); // Debugging log untuk URL yang akan dibuka
+//         // Cek apakah aplikasi dijalankan di website (browser) dan bukan Android
+//         if (/android/i.test(navigator.userAgent)) {
+//             // Di perangkat Android, buka aplikasi native (Android)
+//             launchNativeApp(item.dataset.pkg, item.dataset.label);
+//         } else {
+//             // Di website, buka URL di browser (misalnya YouTube, Netflix)
+//             window.location.href = item.dataset.pkg;  // Arahkan ke URL seperti 'https://www.youtube.com/'
+//         }
+//     }
+// }
+
 function handleKeyDown(e) {
+  if (!notificationPopup.classList.contains('hidden')) {
+    if (e.key === 'Enter' || e.key === 'Escape' || e.key === 'Backspace') {
+      e.preventDefault();
+      hideNotification();
+      return;
+    }
+
+    // Block navigasi lain biar fokus tidak lari ke menu
+    if (e.key.startsWith('Arrow')) {
+      e.preventDefault();
+      notificationOkBtn.focus();
+      return;
+    }
+  }
+
   const blocked = ['MetaLeft','MetaRight','Home','Escape','Back','F10'];
   if (blocked.includes(e.key)) { e.preventDefault(); return; }
   
@@ -583,6 +720,96 @@ function launchNativeApp(pkg, label) {
     }
   } catch (e) { console.error('Failed to launch ' + label, e); }
 }
+
+// notificationOkBtn.addEventListener('click', hideNotification);
+
+// Fungsi untuk menampilkan notifikasi
+function hideNotification() {
+  if (notificationTimeoutId) {
+    clearTimeout(notificationTimeoutId);
+    notificationTimeoutId = null;
+  }
+
+  notificationPopup.classList.add('hidden');
+
+  // Balikin fokus ke menu (atau elemen terakhir)
+  if (lastFocusedElementBeforeNotif && typeof lastFocusedElementBeforeNotif.focus === 'function') {
+    lastFocusedElementBeforeNotif.focus();
+  } else if (menuItems.length > 0) {
+    menuItems[currentFocusIndex].focus();
+  }
+}
+
+
+
+function showNotification(payload) {
+  let title = 'Notification';
+  let body = '';
+
+  if (payload && typeof payload === 'object') {
+    title = payload.title || title;
+    body = payload.body || '';
+  } else {
+    body = String(payload ?? '');
+  }
+
+  const cacheKey = `${title}||${body}`;
+  if (!notificationPopup.classList.contains('hidden') && lastNotificationCache === cacheKey) {
+    return;
+  }
+  lastNotificationCache = cacheKey;
+
+  lastFocusedElementBeforeNotif = document.activeElement;
+
+  notificationTitle.textContent = title;
+  notificationText.textContent = body;
+
+  notificationPopup.classList.remove('hidden');
+
+  // Auto-focus ke OK button
+  setTimeout(() => {
+    notificationOkBtn.focus();
+  }, 50);
+
+  // Auto-hide after a set timeout (optional)
+  // setTimeout(() => {
+  //   hideNotification();
+  // }, 5000); // Auto-close after 5 seconds
+}
+
+
+// === Notification Polling ===
+let notificationPollingIntervalId = null;
+
+async function checkForNotifications() {
+  if (!currentDeviceID) return;
+
+  try {
+    const res = await fetch(`./api.php?action=getNotifications&device_id=${encodeURIComponent(currentDeviceID)}&_=${Date.now()}`);
+    const data = await res.json();
+
+    if (data.status === 'success' && data.notification) {
+      // data.notification boleh object {title, body} atau string
+      showNotification(data.notification);
+    }
+  } catch (err) {
+    console.warn('Error checking notifications:', err);
+  }
+}
+
+function startNotificationPolling() {
+  if (notificationPollingIntervalId) return; // cegah double interval
+  checkForNotifications(); // langsung cek sekali
+  notificationPollingIntervalId = setInterval(checkForNotifications, 3000);
+}
+
+function stopNotificationPolling() {
+  if (notificationPollingIntervalId) clearInterval(notificationPollingIntervalId);
+  notificationPollingIntervalId = null;
+}
+
+
+
 
 function updateClock(weatherData) {
   const now = new Date();

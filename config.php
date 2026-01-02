@@ -1,10 +1,10 @@
 <?php
 define('DB_HOST', 'localhost');
-define('DB_USER', 'phpmyadmin');
-define('DB_PASS', 'mmaiptv2024');
+define('DB_USER', 'root');
+define('DB_PASS', '');
 define('DB_NAME', 'take_off');
 
-define('BASE_URL', 'http://202.8.28.194/AHFix/');
+define('BASE_URL', 'http://192.168.100.18/AHFix/');
 // define('BASE_URL', 'http://10.95.216.63/AHFix/');
 
 

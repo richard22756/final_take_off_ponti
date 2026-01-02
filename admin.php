@@ -74,7 +74,7 @@ $admin_user = $_SESSION['admin_username'] ?? 'Administrator';
                 
 
                 <a href="?page=checkin" class="block px-4 py-2 rounded-lg <?=($page==='checkin')?'bg-yellow-400 text-gray-900':'hover:bg-gray-800'?>">Manajemen Check-In</a>
-            
+                <a href="?page=send_notification" class="block px-4 py-2 rounded-lg <?=($page==='send_notification')?'bg-yellow-400 text-gray-900':'hover:bg-gray-800'?>">Notifikasi</a>
 
                 <a href="?page=facilities" class="block px-4 py-2 rounded-lg <?=($page==='facilities')?'bg-yellow-400 text-gray-900':'hover:bg-gray-800'?>">Facilities</a>
                 <a href="?page=amenities" class="block px-4 py-2 rounded-lg <?=($page==='amenities')?'bg-yellow-400 text-gray-900':'hover:bg-gray-800'?>">Amenities (Barang)</a>
@@ -115,7 +115,7 @@ $admin_user = $_SESSION['admin_username'] ?? 'Administrator';
                     'facilities', 'amenities', 'information', 'dining',
                     'dining_orders', 'amenity_requests', 
                     'app_control', 'running_text', 'update', 'flashscreen',
-                    'login', 'register'
+                    'login', 'register', 'send_notification'
                 ];
              
                 if (in_array($page, $allowed_pages)) {

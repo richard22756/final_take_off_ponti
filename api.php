@@ -262,6 +262,87 @@ try {
         exit;
     }
 
+    // Endpoint untuk mengambil notifikasi terbaru berdasarkan device_id
+    if ($action === 'getNotifications') {
+        header('Content-Type: application/json; charset=utf-8');
+
+        $deviceId = trim((string)($_GET['device_id'] ?? ''));
+        if ($deviceId === '') {
+            http_response_code(400);
+            if (ob_get_length()) { ob_clean(); }
+            echo json_encode(['status' => 'error', 'message' => 'device_id required']);
+            exit;
+        }
+
+        // Hard limit agar aman
+        if (strlen($deviceId) > 128) {
+            http_response_code(400);
+            if (ob_get_length()) { ob_clean(); }
+            echo json_encode(['status' => 'error', 'message' => 'device_id too long']);
+            exit;
+        }
+
+        try {
+            // Wajib InnoDB agar FOR UPDATE efektif
+            $db->beginTransaction();
+
+            // Ambil 1 notifikasi pending untuk device ini, lock row agar tidak dobel
+            $stmt = $db->prepare("
+                SELECT id, title, body
+                FROM popup_notifications
+                WHERE device_id = ?
+                AND status = 'pending'
+                AND (expires_at IS NULL OR expires_at > NOW())
+                ORDER BY created_at ASC
+                LIMIT 1
+                FOR UPDATE
+            ");
+            $stmt->execute([$deviceId]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$row) {
+                $db->commit();
+                if (ob_get_length()) { ob_clean(); }
+                echo json_encode(['status' => 'success', 'notification' => null]);
+                exit;
+            }
+
+            // Mark delivered supaya tidak muncul lagi di polling berikutnya
+            $upd = $db->prepare("
+                UPDATE popup_notifications
+                SET status = 'delivered', delivered_at = NOW()
+                WHERE id = ?
+            ");
+            $upd->execute([(int)$row['id']]);
+
+            $db->commit();
+
+            $title = trim((string)($row['title'] ?? ''));
+            $body  = trim((string)($row['body'] ?? ''));
+
+            // Kirim sebagai object agar index.php bisa isi <h2> dan body terpisah
+            if (ob_get_length()) { ob_clean(); }
+            echo json_encode([
+                'status' => 'success',
+                'notification' => [
+                    'title' => $title,   // boleh kosong
+                    'body'  => $body     // wajib ada isi kalau memang ada notif
+                ]
+            ]);
+            exit;
+
+        } catch (Throwable $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            http_response_code(500);
+            if (ob_get_length()) { ob_clean(); }
+            echo json_encode(['status' => 'error', 'message' => 'Server error']);
+            exit;
+        }
+    }
+
+
     // === API Frontend ===
     switch ($action) {
         case 'checkRegistration':
